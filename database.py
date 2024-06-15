@@ -9,6 +9,7 @@ from models.technology import Technology
 from models.dice import Dice, DiceFace
 from models.constructable import Constructable
 from models.enums import ResourceType, TechType, ConstructableType, SectorRing, FactionList
+from copy import deepcopy
 
 # In-memory data store
 # In-memory data store with dummy data
@@ -28,7 +29,8 @@ discovery_tiles_db = [
 
 planets_db = [
     Planet(resource=ResourceType.Gold),
-    Planet(resource=ResourceType.Science)
+    Planet(resource=ResourceType.Science),
+    Planet(resource=ResourceType.Materials, is_advanced=True)
 ]
 
 reputation_tiles_db = [
@@ -103,7 +105,8 @@ def setup_faction(faction_id: str, player_id: str):
     # find the faction
     for faction in factions_db:
         if faction.id == faction_id:
-            current_faction = faction
+            #create a new instance of the faction with the same values
+            current_faction = deepcopy(faction)
             break
     
     current_player.faction = current_faction
@@ -116,7 +119,11 @@ def setup_faction(faction_id: str, player_id: str):
 
     #loop through all of the planets in this sector and place a resource cube based on the resource type of the planet
     for planet in starting_sector.planets:
-        current_player.resource_cubes_placed[planet.resource] += 1
+        #check if the planet is advanced
+        if not planet.is_advanced:
+            current_player.resource_cubes_placed[planet.resource] += 1
+        elif planet.resource in current_player.advanced_resources:
+            current_player.advanced_resources[planet.resource] += 1
 
     # gather the first set of resources for the player
     current_player.gather_resources()
